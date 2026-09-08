@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  id-token: write
   contents: read
   pull-requests: write
 
@@ -19,7 +20,16 @@ jobs:
       - name: Sign in to Azure
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Test Azure authentication
+        run: |
+          echo "Testing Azure authentication..."
+          az account show
+          echo "Testing resource group access..."
+          az group show --name rg-ai300-l7285e7fd2d8d49919f
 
       - name: Install Azure ML CLI
         run: |
