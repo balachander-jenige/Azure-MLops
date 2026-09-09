@@ -5,9 +5,7 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+
 
 permissions:
   id-token: write
@@ -88,6 +86,10 @@ jobs:
           JOB_NAME="${{ steps.train.outputs.job_name }}"
           echo "Azure ML job outputs:"
           az ml job show --name "$JOB_NAME" --query outputs -o yaml
+          MODEL_URI=$(az ml job show --name "$JOB_NAME" --query "outputs.model_output.uri" -o tsv)
+          METRICS_URI=$(az ml job show --name "$JOB_NAME" --query "outputs.metrics_output.uri" -o tsv)
+          echo "model_output URI: $MODEL_URI"
+          echo "metrics_output URI: $METRICS_URI"
           mkdir -p downloaded-model
           az ml job download \
             --name "$JOB_NAME" \
@@ -100,6 +102,15 @@ jobs:
             exit 1
           fi
           echo "Saved model artifact: $MODEL_FILE"
+          echo "Downloaded output files:"
+          find downloaded-model -type f | sort
+          echo "Downloading metrics output for verification..."
+          mkdir -p downloaded-metrics
+          az ml job download \
+            --name "$JOB_NAME" \
+            --output-name metrics_output \
+            --download-path downloaded-metrics
+          find downloaded-metrics -type f | sort
 
       - name: Extract dev metrics from logs
         id: parse-metrics
