@@ -13,7 +13,7 @@ inputs:
   reg_rate: 0.02
 outputs:
   model_output:
-    type: uri_folder
+    type: mlflow_model
     mode: upload
   metrics_output:
     type: uri_folder
