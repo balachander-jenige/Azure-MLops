@@ -14,8 +14,10 @@ inputs:
 outputs:
   model_output:
     type: uri_folder
+    mode: rw_mount
   metrics_output:
     type: uri_folder
+    mode: rw_mount
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
 compute: azureml:aml-cluster
 experiment_name: diabetes-training
