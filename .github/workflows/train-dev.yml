@@ -22,6 +22,16 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Verify training configuration
+        run: |
+          echo "Commit used by this workflow: $(git rev-parse HEAD)"
+          echo "Training job configuration:"
+          cat src/job.yml
+          echo "Model output argument:"
+          grep -n -- "model_output" src/train-model-parameters.py
 
       - name: Sign in to Azure
         uses: azure/login@v2
