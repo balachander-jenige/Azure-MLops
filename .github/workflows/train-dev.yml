@@ -68,6 +68,25 @@ jobs:
             --name "$JOB_NAME" \
             --set inputs.training_data.path=azureml:diabetes-dev-folder@latest \
             --stream | tee training_output.log
+          echo "job_name=$JOB_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Verify and download model output
+        run: |
+          JOB_NAME="${{ steps.train.outputs.job_name }}"
+          echo "Azure ML job outputs:"
+          az ml job show --name "$JOB_NAME" --query outputs -o yaml
+          mkdir -p downloaded-model
+          az ml job download \
+            --name "$JOB_NAME" \
+            --output-name model_output \
+            --download-path downloaded-model
+          MODEL_FILE=$(find downloaded-model -name model.pkl -type f | head -n 1)
+          if [ -z "$MODEL_FILE" ]; then
+            echo "model.pkl was not found in model_output." >&2
+            find downloaded-model -maxdepth 5 -type f | sort >&2 || true
+            exit 1
+          fi
+          echo "Saved model artifact: $MODEL_FILE"
 
       - name: Extract dev metrics from logs
         id: parse-metrics
