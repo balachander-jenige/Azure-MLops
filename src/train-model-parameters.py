@@ -52,11 +52,24 @@ def split_data(df):
 
     return X_train, X_test, y_train, y_test
 
-# function that trains the model
+# function that trains the model and logs it to MLflow
 def train_model(reg_rate, X_train, X_test, y_train, y_test):
     mlflow.log_param("Regularization rate", reg_rate)
+
     print("Training model...")
-    model = LogisticRegression(C=1/reg_rate, solver="liblinear").fit(X_train, y_train)
+
+    model = LogisticRegression(
+        C=1 / reg_rate,
+        solver="liblinear"
+    ).fit(X_train, y_train)
+
+    # Log the trained model to MLflow
+    mlflow.sklearn.log_model(
+        sk_model=model,
+        name="model"
+    )
+
+    print("Model logged to MLflow as 'model'")
 
     return model
 
