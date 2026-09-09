@@ -20,6 +20,6 @@ outputs:
     mode: upload
 environment: azureml:AzureML-sklearn-1.0-ubuntu20.04-py38-cpu@latest
 compute: azureml:aml-cluster
-experiment_name: diabetes-train
+experiment_name: diabetes-train--mlops
 display_name: diabetes-train-command
 description: diabetes training job
