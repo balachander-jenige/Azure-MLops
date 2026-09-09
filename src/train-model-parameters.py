@@ -19,7 +19,7 @@ def main(args):
     X_train, X_test, y_train, y_test = split_data(df)
 
     # train model
-    model = train_model(args.reg_rate, X_train, X_test, y_train, y_test)
+    model = train_model(args.reg_rate, X_train, X_test, y_train, y_test, args.model_output)
 
     # evaluate model
     metrics = eval_model(model, X_test, y_test)
@@ -53,7 +53,7 @@ def split_data(df):
     return X_train, X_test, y_train, y_test
 
 # function that trains the model and logs it to MLflow
-def train_model(reg_rate, X_train, X_test, y_train, y_test):
+def train_model(reg_rate, X_train, X_test, y_train, y_test, model_output):
     mlflow.log_param("Regularization rate", reg_rate)
 
     print("Training model...")
@@ -63,13 +63,11 @@ def train_model(reg_rate, X_train, X_test, y_train, y_test):
         solver="liblinear"
     ).fit(X_train, y_train)
 
-    # Log the trained model to MLflow
-    mlflow.sklearn.log_model(
-        sk_model=model,
-        name="model"
-    )
+    # Save the trained model to the Azure ML job output directory.
+    os.makedirs(model_output, exist_ok=True)
+    mlflow.sklearn.save_model(sk_model=model, path=model_output)
 
-    print("Model logged to MLflow as 'model'")
+    print(f"Model saved to Azure ML output: {model_output}")
 
     return model
 
@@ -124,6 +122,8 @@ def parse_args():
                         type=float, default=0.01)
     parser.add_argument("--metrics_output", dest='metrics_output',
                         type=str, default=None)
+    parser.add_argument("--model_output", dest='model_output',
+                        type=str, required=True)
 
     # parse args
     args = parser.parse_args()
