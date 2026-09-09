@@ -22,7 +22,7 @@ def main(args):
     model = train_model(args.reg_rate, X_train, X_test, y_train, y_test, args.model_output)
 
     # evaluate model
-    metrics = eval_model(model, X_test, y_test)
+    metrics = eval_model(model, X_test, y_test, args.metrics_output)
 
     # persist metrics so the workflow can comment the actual values deterministically
     if args.metrics_output:
@@ -72,7 +72,7 @@ def train_model(reg_rate, X_train, X_test, y_train, y_test, model_output):
     return model
 
 # function that evaluates the model
-def eval_model(model, X_test, y_test):
+def eval_model(model, X_test, y_test, metrics_output):
     # calculate accuracy
     y_hat = model.predict(X_test)
     acc = np.average(y_hat == y_test)
@@ -85,8 +85,10 @@ def eval_model(model, X_test, y_test):
     print('AUC: ' + str(auc))
     mlflow.log_metric("AUC", auc)
 
+    os.makedirs(metrics_output, exist_ok=True)
+
     # plot ROC curve
-    fpr, tpr, thresholds = roc_curve(y_test, y_scores[:,1])
+    fpr, tpr, thresholds = roc_curve(y_test, y_scores[:, 1])
     fig = plt.figure(figsize=(6, 4))
     # Plot the diagonal 50% line
     plt.plot([0, 1], [0, 1], 'k--')
@@ -95,8 +97,11 @@ def eval_model(model, X_test, y_test):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve')
-    plt.savefig("ROC-Curve.png")
-    mlflow.log_artifact("ROC-Curve.png")
+    roc_path = os.path.join(metrics_output, "ROC-Curve.png")
+    plt.savefig(roc_path, bbox_inches="tight")
+    plt.close(fig)
+    mlflow.log_artifact(roc_path)
+    print(f"ROC curve saved to: {roc_path}")
 
     return {
         "accuracy": float(acc),
